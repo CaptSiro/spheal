@@ -8,7 +8,7 @@ Simple script to manage project paths
 - `program delete id`
   - Deletes path with given entry. Use command `ls` to see ids for all saved paths
 - `program ls [, pattern]`
-  - Lists all saved paths in `[id] path` format. Use optional parameter pattern to search in saved paths
+  - Lists all saved paths. Use optional parameter pattern to search in saved paths
 - `program set setting value`
   - Sets value of specified setting
   - Writeable settings: `slots`

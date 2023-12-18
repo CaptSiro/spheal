@@ -1,10 +1,12 @@
 import json
 import sys
+import os
 
 
-
+os.chdir(os.path.dirname(os.path.realpath(__file__)))
 CONFIG_FILE = "./spheal.json"
 READONLY_SETTINGS = ["paths", "index"]
+
 
 def conf_load():
     with open(CONFIG_FILE, "r") as f:
@@ -22,12 +24,12 @@ def todo(message: str):
 
 def cmd_help(program: str):
     print(f"Usage: {program} <command>")
-    print(f"\t{program} [, help]\n\t\tShows this help")
-    print(f"\t{program} add path\n\t\tAdds path but it is not selected")
-    print(f"\t{program} delete id\n\t\tDeletes path with given entry. Use command `ls` to see ids for all saved paths")
-    print(f"\t{program} ls [, pattern]\n\t\tLists all saved paths in `[id] path` format. Use optional parameter pattern to search in saved paths")
-    print(f"\t{program} set setting value\n\t\tSets value of specified setting\n\t\t\tWriteable settings: slots")
-    print(f"\t{program} select slot id\n\t\tWrites path of given id to specified slot. Slot is number and it is appended to the path of setting 'slots'")
+    print(f"\n\t[, help]\n\t\tShows this help")
+    print(f"\n\tadd path\n\t\tAdds path but it is not selected")
+    print(f"\n\tdelete id\n\t\tDeletes path with given entry. Use command `ls` to see ids for all saved paths")
+    print(f"\n\tls [, pattern]\n\t\tLists all saved paths. Use optional parameter pattern to search in saved paths")
+    print(f"\n\tset setting value\n\t\tSets value of specified setting\n\t\t\tWriteable settings: slots")
+    print(f"\n\tselect slot id\n\t\tWrites path of given id to specified slot. Slot is number and it is appended to the path of setting 'slots'")
 
 
 def cmd_add(args):
@@ -37,12 +39,12 @@ def cmd_add(args):
 
     conf = conf_load()
 
-    for path_id, path in conf["paths"]:
+    for path_id, path, slot in conf["paths"]:
         if path == args[0]:
             print(f"Path `{path}` is already saved under id `{path_id}`")
             return
 
-    conf["paths"].append([conf["index"], args[0]])
+    conf["paths"].append([conf["index"], args[0], "NULL"])
     conf["index"] += 1
     conf_save(conf)
 
@@ -87,12 +89,13 @@ def cmd_ls(args):
         print("No paths saved...")
         return
 
+    print("[id]\tslot\tpath")
     argc = len(args)
-    for path_id, path in conf["paths"]:
+    for path_id, path, slot in conf["paths"]:
         if argc > 0 and not matches_pattern(args[0], path):
             continue
 
-        print(f"[{path_id}] {path}")
+        print(f"[{path_id}]\t{'' if slot == 'NULL' else slot}\t{path}")
 
 
 def cmd_set(args):
@@ -119,17 +122,26 @@ def cmd_select(args):
 
     conf = conf_load()
     slot, path_id = args
+
     i = index_of(conf["paths"], lambda p: str(p[0]) == str(path_id))
     if i is None:
         print(f"Could not find path with id `{path_id}`")
         return
 
     path = conf["paths"][i]
+
+    old = index_of(conf["paths"], lambda p: str(p[2]) == str(slot))
+    if old is not None:
+        conf["paths"][old][2] = "NULL"
+
     file_name = conf["slots"] + str(slot)
     with open(file_name, "w") as f:
         f.write(path[1])
 
     print(f"{path[1]} >> {file_name}")
+    path[2] = slot
+
+    conf_save(conf)
 
 
 def main():
