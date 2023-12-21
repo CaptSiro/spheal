@@ -104,6 +104,11 @@ def cmd_delete(args: Args):
     conf_save(conf)
 
 
+COLOR_CYAN = "\u001b[36m"
+COLOR_YELLOW = "\u001b[33;1m"
+COLOR_RESET = "\u001b[0m"
+def color(c: str, text) -> str:
+    return c + str(text) + COLOR_RESET
 def matches_pattern(pattern, subject):
     pattern_length = len(pattern)
     pattern_index = 0
@@ -122,13 +127,13 @@ def cmd_ls(args: Args):
         print("No paths saved...")
         return
 
-    print("[id]\tslot\tpath")
+    print(f"[{color(COLOR_CYAN, 'ID')}]\t{color(COLOR_YELLOW, 'SLOT')}\tPATH")
     argc = len(args.common)
     for path_id, path, slot in conf["paths"]:
         if argc > 0 and not matches_pattern(args.common[0], path):
             continue
 
-        print(f"[{path_id}]\t{'' if slot == 'NULL' else slot}\t{path}")
+        print(f"[{color(COLOR_CYAN, path_id)}]\t{color(COLOR_YELLOW, '' if slot == 'NULL' else slot)}\t{path}")
 
 
 def cmd_set(args: Args):
