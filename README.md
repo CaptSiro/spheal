@@ -1,16 +1,20 @@
 # spheal
 Simple script to manage project paths
 
-- `program [, help]`
-  - Shows this help
-- `program add <path> [, --slot=<slot>]`
-  - Adds path, but it is not selected
-  - You can specify slot for this path with the `--slot=<slot>` argument
-- `program delete <id>`
-  - Deletes path with given entry. Use command `ls` to see ids for all saved paths
-- `program ls [, pattern]`
-  - Lists all saved paths. Use optional parameter pattern to search in saved paths
-- `program set <setting> <value>`
-  - Sets value of specified setting
-  - Writeable settings:
-    - `slots` - Absolute file path that will be used to store slots. File example: `~/spheal-slot-` Directory example: `~/spheal-slots/`
+```txt
+Usage: /path/spheal.py <commands>
+	select <slot> <path_id>
+		Writes path of given <path_id> to specified <slot>. The destination of slot is determined by setting 'slots' + <slot>
+
+	add <path> [, --slot=<slot_name>]
+		Saves given path. If the optional argument --slot=<slot_name> is provided, it automatically selects the added path to <slot_name>
+
+	delete <id> [, --pattern=<pattern>, --slot=<slot>]
+		Deletes path with given entry. Use command `ls` to see ids for all saved paths. Use optional arguments to specify path. <pattern> must return specify only one path.
+
+	ls [, <pattern>]
+		Lists all saved paths. Use optional parameter <pattern> to search in saved paths
+
+	setting <name> <value>
+		Set <value> to <name>. Writeable settings are: 'slots'
+```
