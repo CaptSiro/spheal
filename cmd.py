@@ -25,7 +25,6 @@ class Args:
         return Args(common, named)
 
 
-
 def command(arguments, description):
     def decorator(fn):
         def wrapper(*args, **kwargs):
@@ -40,9 +39,9 @@ def command(arguments, description):
         return wrapper
     return decorator
 
+
 def is_cmd(obj):
     return hasattr(obj, "__dict__") and "is_command" in obj.__dict__
-
 
 
 def select_slot(config, slot, path_id):
@@ -55,7 +54,9 @@ def select_slot(config, slot, path_id):
 
     old = utils.index_of(config["paths"], lambda p: str(p[2]) == str(slot))
     if old is not None:
-        os.unlink(config["slots"] + config["paths"][old][2])
+        if os.path.isfile(config["slots"] + config["paths"][old][2]):
+            os.unlink(config["slots"] + config["paths"][old][2])
+
         config["paths"][old][2] = "NULL"
 
     file_name = config["slots"] + str(slot)
@@ -66,7 +67,6 @@ def select_slot(config, slot, path_id):
     path[2] = slot
 
     conf.save(config)
-
 
 
 @command(
@@ -81,7 +81,6 @@ def cmd_select(args: Args):
     config = conf.load()
     slot, path_id = args.common
     select_slot(config, slot, path_id)
-
 
 
 @command(
@@ -111,7 +110,6 @@ def cmd_add(args: Args):
     conf.save(config)
 
 
-
 @command(
     "<id> [, --pattern=<pattern>, --slot=<slot>]",
     "Deletes path with given entry. Use command `ls` to see ids for all saved paths. Use optional arguments to specify path. <pattern> must return specify only one path."
@@ -121,35 +119,39 @@ def cmd_delete(args: Args):
 
     index = None
     if "pattern" in args.named:
-        temp = utils.indexes_of(config["paths"], lambda p: utils.matches_pattern(args.named["pattern"], p[1]))
+        temp = utils.indexes_of(
+            config["paths"], lambda p: utils.matches_pattern(args.named["pattern"], p[1]))
         if len(temp) != 1:
             print("Pattern specifies more then one path.")
             exit(1)
         index = temp[0]
     elif "slot" in args.named:
-        index = utils.index_of(config["paths"], lambda p: str(p[2]) == args.named["slot"])
+        index = utils.index_of(
+            config["paths"], lambda p: str(p[2]) == args.named["slot"])
     elif len(args.common) == 1:
-        index = utils.index_of(config["paths"], lambda p: str(p[0]) == args.common[0])
+        index = utils.index_of(
+            config["paths"], lambda p: str(p[0]) == args.common[0])
     else:
         print("Missing path id argument")
         exit(1)
 
     if index is None:
-        print(f"Could not find path")
+        print("Could not find path")
         return
 
     slot = config["paths"][index][2]
-    if slot != "NULL":
+    if slot != "NULL" and os.path.isfile(config["slots"] + slot):
         os.unlink(config["slots"] + slot)
 
     config["paths"].pop(index)
     conf.save(config)
 
 
-
 CYAN = utils.COLOR_CYAN
 YELLOW = utils.COLOR_YELLOW
 tint = utils.color
+
+
 @command(
     "[, <pattern>]",
     "Lists all saved paths. Use optional parameter <pattern> to search in saved paths"
@@ -166,8 +168,11 @@ def cmd_ls(args: Args):
         if argc > 0 and not utils.matches_pattern(args.common[0], path):
             continue
 
-        print(f"[{tint(CYAN, path_id)}]\t{tint(YELLOW, '' if slot == 'NULL' else slot)}\t{path}")
-
+        print("[%s]\t%s\t%s" % (
+            tint(CYAN, path_id),
+            tint(YELLOW, '' if slot == 'NULL' else slot),
+            path
+        ))
 
 
 @command(
@@ -189,4 +194,3 @@ def cmd_setting(args: Args):
     conf.save(config)
 
     print(f"{setting}: {value}")
-
